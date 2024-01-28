@@ -1,4 +1,4 @@
-package ir.co.holoo.sinamap
+package ir.co.holoo.sinamap.activities
 
 import android.os.Bundle
 import android.util.Log
@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import ir.co.holoo.sinamap.adapter.PlacesAdapter
 import ir.co.holoo.sinamap.databinding.ActivityPlacesBinding
 import ir.co.holoo.sinamap.model.Place
+import ir.co.holoo.sinamap.utils.DBHelper2
 
 
 class PlacesActivity : AppCompatActivity() {

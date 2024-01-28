@@ -1,4 +1,4 @@
-package ir.co.holoo.sinamap
+package ir.co.holoo.sinamap.activities
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -17,7 +17,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import ir.co.holoo.sinamap.R
 import ir.co.holoo.sinamap.databinding.ActivityMainBinding
+import ir.co.holoo.sinamap.utils.DBHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
