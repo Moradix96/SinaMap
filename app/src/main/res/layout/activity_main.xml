@@ -104,9 +104,20 @@
         android:layout_marginBottom="16dp"
         android:clickable="true"
         android:focusable="true"
-
         android:src="@drawable/my_location_svgrepo_com"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="#fff"
+        android:paddingHorizontal="2dp"
+        android:text="Sina Moradi - Moradix96@gmail.com"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/appBar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
