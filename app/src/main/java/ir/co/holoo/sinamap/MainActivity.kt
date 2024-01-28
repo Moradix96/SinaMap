@@ -3,6 +3,7 @@ package ir.co.holoo.sinamap
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Bundle
@@ -32,6 +33,7 @@ import org.osmdroid.views.overlay.ItemizedIconOverlay
 import org.osmdroid.views.overlay.ItemizedOverlayWithFocus
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.OverlayItem
+import java.io.IOException
 
 
 class MainActivity : AppCompatActivity() {
@@ -44,6 +46,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setupDatabase()
         val map = binding.map
 
         //map.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
@@ -134,6 +137,11 @@ class MainActivity : AppCompatActivity() {
 
         }
 
+        binding.btnShowList.setOnClickListener {
+            val intent = Intent(this, PlacesActivity::class.java)
+            startActivity(intent)
+        }
+
         val mapEventsReceiver = object : MapEventsReceiver {
             override fun singleTapConfirmedHelper(geoPoint: GeoPoint): Boolean {
                 showPopup(geoPoint)
@@ -151,9 +159,19 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun setupDatabase() {
+        val databaseHelper = DBHelper(this)
+
+        try {
+            databaseHelper.createDatabase() // Create the database from the assets folder.
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+
     private fun showPopup(geoPoint: GeoPoint) {
         // Convert the GeoPoint to a Pixel
-        val point = binding.map.getProjection().toPixels(geoPoint, null)
+        val point = binding.map.projection.toPixels(geoPoint, null)
 
         // Inflate the popup_layout.xml
         val layoutInflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
@@ -182,7 +200,8 @@ class MainActivity : AppCompatActivity() {
         // Set click listeners for popup menu buttons
         buttonRoute.setOnClickListener {
             // Handle "Add" action
-            Toast.makeText(this, "On route click, not implemented", Toast.LENGTH_SHORT).show()
+            //Toast.makeText(this, "On route click, not implemented", Toast.LENGTH_SHORT).show()
+            drawRouteTo(binding.map, geoPoint)
             popupWindow.dismiss()
         }
         buttonAdd.setOnClickListener {
@@ -193,6 +212,58 @@ class MainActivity : AppCompatActivity() {
 
         // Finally, show the popup window on the map
         popupWindow.showAtLocation(binding.map, Gravity.NO_GRAVITY, point.x, point.y)
+    }
+
+    private fun drawRouteTo(map: MapView, geoPoint: GeoPoint) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.d("TAG", "PERMISSION_WAS_GRANTED")
+
+
+            val location =
+                locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+            val latitude = location?.latitude
+            val longitude = location?.longitude
+            Log.d("TAG", "Goto " + latitude + "," + longitude)
+            Toast.makeText(this, "اینجا: " + latitude + "," + longitude, Toast.LENGTH_SHORT)
+                .show()
+            if (latitude != null && longitude != null) {
+                val myPoint1 = GeoPoint(latitude, longitude)
+                addMarker(
+                    map,
+                    latitude,
+                    longitude,
+                    R.drawable.map_pin_svgrepo_com,
+                    "شما"
+                )
+                binding.map.controller.setCenter(myPoint1)
+                binding.map.controller.setZoom(19.0)
+                binding.map.controller.animateTo(myPoint1)
+            } else {
+                Log.d("TAG", "Current location is null")
+                Toast.makeText(
+                    this,
+                    "مشکلی هنگام دریافت موقعیت کنونی شما رخ داد!",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        } else {
+            Log.e("TAG", "Permission Denied")
+
+            // Permission is not granted. Request for permission.
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ),
+                123456
+            )
+        }
+
     }
 
     @SuppressLint("MissingPermission")
