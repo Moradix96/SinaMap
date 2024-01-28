@@ -201,14 +201,12 @@ class MainActivity : AppCompatActivity() {
 
         // Set click listeners for popup menu buttons
         buttonRoute.setOnClickListener {
-            // Handle "Add" action
-            //Toast.makeText(this, "On route click, not implemented", Toast.LENGTH_SHORT).show()
             drawRouteTo(binding.map, geoPoint)
             popupWindow.dismiss()
         }
         buttonAdd.setOnClickListener {
-            // Handle "Go" action
-            Toast.makeText(this, "On add click, not implemented", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, AddPlaceActivity::class.java)
+            startActivity(intent)
             popupWindow.dismiss()
         }
 

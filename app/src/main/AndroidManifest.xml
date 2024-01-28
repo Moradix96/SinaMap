@@ -36,6 +36,9 @@
         <activity
             android:name=".activities.PlacesActivity"
             android:exported="false" />
+        <activity
+            android:name=".activities.AddPlaceActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
