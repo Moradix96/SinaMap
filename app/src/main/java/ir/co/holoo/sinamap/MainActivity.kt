@@ -7,6 +7,11 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.widget.LinearLayout
+import android.widget.PopupWindow
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -19,11 +24,13 @@ import kotlinx.coroutines.withContext
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.config.Configuration
+import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.ItemizedIconOverlay
 import org.osmdroid.views.overlay.ItemizedOverlayWithFocus
+import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.OverlayItem
 
 
@@ -126,8 +133,67 @@ class MainActivity : AppCompatActivity() {
             }
 
         }
+
+        val mapEventsReceiver = object : MapEventsReceiver {
+            override fun singleTapConfirmedHelper(geoPoint: GeoPoint): Boolean {
+                showPopup(geoPoint)
+                return true
+            }
+
+            override fun longPressHelper(geoPoint: GeoPoint): Boolean {
+                // Handle long press if needed
+                return false
+            }
+        }
+
+        val overlayEvents = MapEventsOverlay(mapEventsReceiver)
+        binding.map.overlays.add(overlayEvents)
+
     }
 
+    private fun showPopup(geoPoint: GeoPoint) {
+        // Convert the GeoPoint to a Pixel
+        val point = binding.map.getProjection().toPixels(geoPoint, null)
+
+        // Inflate the popup_layout.xml
+        val layoutInflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        val customView = layoutInflater.inflate(R.layout.main_popup_menu, null)
+
+        // Initialize a new instance of popup window
+        val popupWindow = PopupWindow(
+            customView,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+
+        // Set an elevation for the popup window
+        popupWindow.elevation = 10.0F
+
+        // Set the popup window to be focusable
+        popupWindow.isFocusable = true
+
+        // Set the popup window to be outside touchable
+        popupWindow.isOutsideTouchable = true
+
+        // Get the widgets reference from custom view
+        val buttonRoute = customView.findViewById<TextView>(R.id.menu_route)
+        val buttonAdd = customView.findViewById<TextView>(R.id.menu_add)
+
+        // Set click listeners for popup menu buttons
+        buttonRoute.setOnClickListener {
+            // Handle "Add" action
+            Toast.makeText(this, "On route click, not implemented", Toast.LENGTH_SHORT).show()
+            popupWindow.dismiss()
+        }
+        buttonAdd.setOnClickListener {
+            // Handle "Go" action
+            Toast.makeText(this, "On add click, not implemented", Toast.LENGTH_SHORT).show()
+            popupWindow.dismiss()
+        }
+
+        // Finally, show the popup window on the map
+        popupWindow.showAtLocation(binding.map, Gravity.NO_GRAVITY, point.x, point.y)
+    }
 
     @SuppressLint("MissingPermission")
     override fun onRequestPermissionsResult(
@@ -181,7 +247,8 @@ class MainActivity : AppCompatActivity() {
         // Create an ItemizedOverlayWithFocus and add your OverlayItem
         val items = ArrayList<OverlayItem>()
         items.add(myLocationOverlayItem)
-        val markersOverlay = ItemizedOverlayWithFocus(items,
+        val markersOverlay = ItemizedOverlayWithFocus(
+            items,
             object : ItemizedIconOverlay.OnItemGestureListener<OverlayItem> {
                 override fun onItemSingleTapUp(index: Int, item: OverlayItem): Boolean {
                     // Your action here on marker tap
