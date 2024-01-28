@@ -35,11 +35,11 @@ public abstract class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.V
         holder.tvName.setText(item.getName());
 
         holder.itemView.setOnClickListener(v -> {
-            //onClick(item.getRowid() + "", item.getAbout());
+            onClick(item);
         });
     }
 
-    public abstract void onClick(String rowid, String name);
+    public abstract void onClick(Place place);
 
     @Override
     public int getItemCount() {

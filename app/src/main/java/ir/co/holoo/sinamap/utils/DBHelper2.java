@@ -19,8 +19,8 @@ public class DBHelper2 {
         while (cursor.moveToNext()) {
             final int row_id = cursor.getInt(0);
             final String r_name = cursor.getString(1);
-            final int r_lat = cursor.getInt(2);
-            final int r_lon = cursor.getInt(3);
+            final double r_lat = cursor.getDouble(2);
+            final double r_lon = cursor.getDouble(3);
 
             places.add(new Place(row_id, r_name, r_lat, r_lon));
         }

@@ -2,6 +2,7 @@ package ir.co.holoo.sinamap.activities
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import ir.co.holoo.sinamap.adapter.PlacesAdapter
 import ir.co.holoo.sinamap.databinding.ActivityPlacesBinding
@@ -25,7 +26,12 @@ class PlacesActivity : AppCompatActivity() {
         val list: ArrayList<Place> = DBHelper2.getPlaces(this)
         Log.d("TAG", "onCreate: " + list.size)
         val adapter: PlacesAdapter = object : PlacesAdapter(list) {
-            override fun onClick(rowid: String?, name: String?) {
+            override fun onClick(place: Place) {
+                Toast.makeText(
+                    this@PlacesActivity,
+                    "موقعیت: " + place.lat + ", " + place.lon,
+                    Toast.LENGTH_SHORT
+                ).show()
                 /*val intent: Intent = Intent(
                     this@PlacesActivity,
                     DetailsActivity::class.java

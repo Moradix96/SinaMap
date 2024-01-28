@@ -19,7 +19,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import ir.co.holoo.sinamap.R
 import ir.co.holoo.sinamap.databinding.ActivityMainBinding
+import ir.co.holoo.sinamap.model.Place
 import ir.co.holoo.sinamap.utils.DBHelper
+import ir.co.holoo.sinamap.utils.DBHelper2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -158,6 +160,22 @@ class MainActivity : AppCompatActivity() {
 
         val overlayEvents = MapEventsOverlay(mapEventsReceiver)
         binding.map.overlays.add(overlayEvents)
+
+        loadMapPoints()
+    }
+
+    private fun loadMapPoints() {
+        val list: ArrayList<Place> = DBHelper2.getPlaces(this)
+        for (item in list) {
+            addMarker(
+                binding.map,
+                item.lat,
+                item.lon,
+                R.drawable.map_pin_svgrepo_com,
+                item.name
+            )
+        }
+
 
     }
 
@@ -302,28 +320,34 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val items = ArrayList<OverlayItem>()
+    private lateinit var markersOverlay: ItemizedOverlayWithFocus<OverlayItem>
+
     fun addMarker(map: MapView, lat: Double, lon: Double, resourceId: Int, toastMessage: String) {
-        // Set the map's center to your location
-        val mapController = map.controller
-        val currentLocation = GeoPoint(lat, lon) // replace lat, lon with your coordinates
-        mapController.setCenter(currentLocation)
+        val location = GeoPoint(lat, lon)
 
         // Create an OverlayItem to mark your location
-        val myLocationOverlayItem = OverlayItem("اینجا", "موقعیت کنونی", currentLocation)
+        val myLocationOverlayItem = OverlayItem(toastMessage, toastMessage, location)
 
         // Set a custom marker if you want (optional)
         val markerDrawable = ContextCompat.getDrawable(applicationContext, resourceId)
         myLocationOverlayItem.setMarker(markerDrawable)
 
-        // Create an ItemizedOverlayWithFocus and add your OverlayItem
-        val items = ArrayList<OverlayItem>()
+        // Add your OverlayItem to the existing items list
         items.add(myLocationOverlayItem)
-        val markersOverlay = ItemizedOverlayWithFocus(
+
+        // If markersOverlay is already initialized, remove it from the map overlays
+        if (::markersOverlay.isInitialized) {
+            map.overlays.remove(markersOverlay)
+        }
+
+        // Create a new ItemizedOverlayWithFocus with the updated items list
+        markersOverlay = ItemizedOverlayWithFocus(
             items,
             object : ItemizedIconOverlay.OnItemGestureListener<OverlayItem> {
                 override fun onItemSingleTapUp(index: Int, item: OverlayItem): Boolean {
                     // Your action here on marker tap
-                    Toast.makeText(applicationContext, toastMessage, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext, item.title, Toast.LENGTH_SHORT).show()
                     return true
                 }
 
@@ -337,6 +361,5 @@ class MainActivity : AppCompatActivity() {
         // Add the overlay to the MapView
         map.overlays.add(markersOverlay)
     }
-
 
 }
