@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
 
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-        binding.btnGoMyLocation.setOnClickListener {
+        binding.fabGoHome.setOnClickListener {
             Log.d("TAG", "btnGoMyLocation Clicked")
 
             if (ContextCompat.checkSelfPermission(
