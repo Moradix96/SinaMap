@@ -1,5 +1,6 @@
 package ir.co.holoo.sinamap.utils;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -28,5 +29,19 @@ public class DBHelper2 {
         db.close();
         return places;
     }
+
+    public static void insertPlace(Context context, Place place) {
+        final DBHelper databaseHelper = new DBHelper(context);
+        final SQLiteDatabase db = databaseHelper.openDatabase();
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("name", place.getName());
+        contentValues.put("lat", place.getLat());
+        contentValues.put("lon", place.getLon());
+
+        db.insert("places", null, contentValues);
+        db.close();
+    }
+
 
 }

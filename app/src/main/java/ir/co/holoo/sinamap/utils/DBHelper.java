@@ -32,8 +32,10 @@ public class DBHelper extends SQLiteOpenHelper {
         // Check if the database already exists.
         final boolean databaseExists = checkDatabase();
 
-        if (databaseExists) { //This is just for being backward compatible every time
-            removeDatabase();
+        if (databaseExists) {
+            //removeDatabase();
+            //Do Nothing
+            return;
         }
 
         // Create an empty database into the default system path of your application database.

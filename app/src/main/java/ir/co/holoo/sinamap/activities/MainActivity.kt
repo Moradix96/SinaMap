@@ -2,6 +2,7 @@ package ir.co.holoo.sinamap.activities
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -14,6 +15,7 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -224,13 +226,28 @@ class MainActivity : AppCompatActivity() {
         }
         buttonAdd.setOnClickListener {
             val intent = Intent(this, AddPlaceActivity::class.java)
-            startActivity(intent)
+            intent.putExtra("lat", geoPoint.latitude)
+            intent.putExtra("lon", geoPoint.longitude)
+
+            launcher.launch(intent)
+
             popupWindow.dismiss()
         }
 
         // Finally, show the popup window on the map
         popupWindow.showAtLocation(binding.map, Gravity.NO_GRAVITY, point.x, point.y)
     }
+
+    private val launcher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data: Intent? = result.data
+                // Handle the result here
+
+                //TODO Refresh
+                Toast.makeText(this, "صفحه باید رفرش شود", Toast.LENGTH_SHORT).show()
+            }
+        }
 
     private fun drawRouteTo(map: MapView, geoPoint: GeoPoint) {
         if (ContextCompat.checkSelfPermission(
