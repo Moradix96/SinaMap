@@ -21,6 +21,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import ir.co.holoo.sinamap.R
 import ir.co.holoo.sinamap.databinding.ActivityMainBinding
+import ir.co.holoo.sinamap.dialogs.GoDialogFragment
 import ir.co.holoo.sinamap.model.Place
 import ir.co.holoo.sinamap.utils.DBHelper
 import ir.co.holoo.sinamap.utils.DBHelper2
@@ -88,6 +89,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+        binding.btnSearch.setOnClickListener {
+            val dialogFragment = GoDialogFragment()
+            dialogFragment.show(supportFragmentManager, "GoDialogFragment")
+        }
 
         binding.fabGoHome.setOnClickListener {
             Log.d("TAG", "btnGoMyLocation Clicked")

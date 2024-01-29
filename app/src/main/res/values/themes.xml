@@ -8,4 +8,11 @@
     </style>
 
     <style name="Theme.SinaMap" parent="Base.Theme.SinaMap" />
+
+    <style name="CustomDialogThemeJ">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowBackground">#73000000</item>
+    </style>
 </resources>
