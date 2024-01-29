@@ -43,7 +43,9 @@ class AddPlaceActivity : AppCompatActivity() {
             )
 
             val resultIntent = Intent()
-            //resultIntent.putExtra("key", resultData)
+            resultIntent.putExtra("name", binding.editTextName.text.toString())
+            resultIntent.putExtra("lat", geoPoint.latitude)
+            resultIntent.putExtra("lon", geoPoint.longitude)
             setResult(Activity.RESULT_OK, resultIntent)
             finish()
         }

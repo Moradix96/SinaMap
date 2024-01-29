@@ -244,7 +244,13 @@ class MainActivity : AppCompatActivity() {
                 val data: Intent? = result.data
                 // Handle the result here
 
-                //TODO Refresh
+                addMarker(
+                    binding.map,
+                    data!!.getDoubleExtra("lat", 0.0),
+                    data.getDoubleExtra("lon", 0.0),
+                    R.drawable.map_pin_svgrepo_com,
+                    data.getStringExtra("name")!!
+                )
                 Toast.makeText(this, "صفحه باید رفرش شود", Toast.LENGTH_SHORT).show()
             }
         }
