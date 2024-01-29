@@ -6,6 +6,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
@@ -52,7 +54,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var map: MapView
     private lateinit var mapController: IMapController
 
-    private val defaultLocation = GeoPoint(35.736330956312294, 51.46915335841092)
+    private var defaultLocation = GeoPoint(35.736330956312294, 51.46915335841092)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,9 +80,10 @@ class MainActivity : AppCompatActivity() {
         // Set the map center to Tehran
         showTehran()
 
-        drawExamplePath()
+        //drawExamplePath()
 
-        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+        calculateCurrentLocation()
 
         binding.btnSearch.setOnClickListener {
             val goDialog = MyGoDialogFragment()
@@ -88,54 +91,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.fabGoHome.setOnClickListener {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                Log.d("TAG", "PERMISSION_WAS_GRANTED")
-
-                val location =
-                    locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-                val latitude = location?.latitude
-                val longitude = location?.longitude
-                Log.d("TAG", "Goto " + latitude + "," + longitude)
-                Toast.makeText(this, "اینجا: " + latitude + "," + longitude, Toast.LENGTH_SHORT)
-                    .show()
-                if (latitude != null && longitude != null) {
-                    val myPoint1 = GeoPoint(latitude, longitude)
-                    addMarker(
-                        map,
-                        latitude,
-                        longitude,
-                        R.drawable.map_pin_svgrepo_com,
-                        "موقعیت کنونی شما"
-                    )
-                    mapController.setCenter(myPoint1)
-                    mapController.setZoom(19.0)
-                    mapController.animateTo(myPoint1)
-                } else {
-                    Log.d("TAG", "Current location is null")
-                    Toast.makeText(
-                        this,
-                        "مشکلی هنگام دریافت موقعیت کنونی شما رخ داد!",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            } else {
-                Log.e("TAG", "Permission Denied")
-
-                // Permission is not granted. Request for permission.
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    ),
-                    123456
-                )
-            }
-
+            addMarker(
+                map,
+                defaultLocation.latitude,
+                defaultLocation.longitude,
+                R.drawable.map_pin_svgrepo_com,
+                "موقعیت کنونی شما"
+            )
+            mapController.setCenter(defaultLocation)
+            mapController.setZoom(19.0)
+            mapController.animateTo(defaultLocation)
         }
 
         binding.btnShowList.setOnClickListener {
@@ -159,6 +124,75 @@ class MainActivity : AppCompatActivity() {
         map.overlays.add(overlayEvents)
 
         loadMapPoints()
+    }
+
+    private fun calculateCurrentLocation() {
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.d("TAG", "PERMISSION_WAS_GRANTED")
+
+            getCurrentLocationCore()
+        } else {
+            Log.e("TAG", "Permission Denied")
+
+            // Permission is not granted. Request for permission.
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ),
+                123456
+            )
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun getCurrentLocationCore() {
+        val providers = locationManager.getProviders(true)
+        var mostAccurateLocation: Location? = null
+
+        //Toast.makeText(this, "Count: " + providers.size, Toast.LENGTH_SHORT).show()
+        val locationListener: LocationListener = object : LocationListener {
+            override fun onLocationChanged(location: Location) {
+                // New location update
+                if (mostAccurateLocation == null || location.accuracy < mostAccurateLocation!!.accuracy) {
+                    mostAccurateLocation = location
+                    val latitude = mostAccurateLocation?.latitude
+                    val longitude = mostAccurateLocation?.longitude
+
+                    Log.d("TAG", "Here: $latitude,$longitude")
+
+                    if (latitude != null && longitude != null) {
+                        defaultLocation.latitude = latitude
+                        defaultLocation.longitude = longitude
+                        Toast.makeText(
+                            this@MainActivity,
+                            "موقعیت مکانی شما به روز شد.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        locationManager.removeUpdates(this)
+                    } else {
+                        Log.d("TAG", "Current location is null")
+                        Toast.makeText(
+                            this@MainActivity,
+                            "مشکلی هنگام دریافت موقعیت کنونی شما رخ داد!",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+        }
+
+        // Request location updates from all providers
+        for (provider in providers) {
+            locationManager.requestLocationUpdates(provider, 0L, 0f, locationListener)
+        }
     }
 
     private fun drawExamplePath() {
@@ -278,29 +312,7 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 123456) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                val location =
-                    locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-                val latitude = location?.latitude
-                val longitude = location?.longitude
-                Log.d("TAG", "Goto " + latitude + "," + longitude)
-                Toast.makeText(this, "اینجا: " + latitude + "," + longitude, Toast.LENGTH_SHORT)
-                    .show()
-                if (latitude != null && longitude != null) {
-                    val myPoint1 = GeoPoint(latitude, longitude)
-                    mapController.setCenter(myPoint1)
-                    mapController.setZoom(19.0)
-                    mapController.animateTo(myPoint1)
-                } else {
-                    Log.d("TAG", "Current location is null")
-                    Toast.makeText(
-                        this,
-                        "مشکلی هنگام دریافت موقعیت کنونی شما رخ داد!",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-
-
+                getCurrentLocationCore()
             }
         }
     }
@@ -356,7 +368,10 @@ class MainActivity : AppCompatActivity() {
 
 class MyGoDialogFragment : GoDialogFragment() {
     override fun go(lat: Double, lon: Double) {
-        Toast.makeText(activity, "روی go کلیک شد", Toast.LENGTH_SHORT).show()
+        //Toast.makeText(activity, "روی go کلیک شد", Toast.LENGTH_SHORT).show()
+
+        //drawRoute(defaultLocation, geoPoint)
+
     }
 }
 
