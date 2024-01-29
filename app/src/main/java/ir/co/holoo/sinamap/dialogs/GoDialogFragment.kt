@@ -8,8 +8,13 @@ import androidx.fragment.app.DialogFragment
 import ir.co.holoo.sinamap.R
 import ir.co.holoo.sinamap.databinding.FragmentGoDialogBinding
 
-abstract class GoDialogFragment : DialogFragment() {
+class GoDialogFragment : DialogFragment() {
     private lateinit var binding: FragmentGoDialogBinding
+    var goListener: GoListener? = null
+        set(value) {
+            field = value
+            println("Interface has been set.")
+        }
 
     override fun onStart() {
         super.onStart()
@@ -31,18 +36,23 @@ abstract class GoDialogFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
-
         binding.btnGo.setOnClickListener {
-            go(binding.etLat.text.toString().toDouble(), binding.etLon.text.toString().toDouble())
+            goListener?.go(
+                binding.etLat.text.toString().toDouble(),
+                binding.etLon.text.toString().toDouble()
+            )
             dismiss()
         }
 
     }
 
-    abstract fun go(lat: Double, lon: Double)
+    //abstract fun go(lat: Double, lon: Double)
 
     override fun getTheme(): Int {
         return R.style.CustomDialogThemeJ
     }
+}
+
+interface GoListener {
+    fun go(lat: Double, lon: Double)
 }

@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat
 import ir.co.holoo.sinamap.R
 import ir.co.holoo.sinamap.databinding.ActivityMainBinding
 import ir.co.holoo.sinamap.dialogs.GoDialogFragment
+import ir.co.holoo.sinamap.dialogs.GoListener
 import ir.co.holoo.sinamap.model.Place
 import ir.co.holoo.sinamap.utils.DBHelper
 import ir.co.holoo.sinamap.utils.DBHelper2
@@ -86,7 +87,14 @@ class MainActivity : AppCompatActivity() {
         calculateCurrentLocation()
 
         binding.btnSearch.setOnClickListener {
-            val goDialog = MyGoDialogFragment()
+            val goDialog = GoDialogFragment()
+            goDialog.goListener = object : GoListener {
+                override fun go(lat: Double, lon: Double) {
+                    drawRoute(defaultLocation, GeoPoint(lat, lon))
+                    Toast.makeText(this@MainActivity, "GO" + lat + " " + lon, Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
             goDialog.show(supportFragmentManager, "GoDialogFragment")
         }
 
@@ -366,6 +374,7 @@ class MainActivity : AppCompatActivity() {
 
 }
 
+/*
 class MyGoDialogFragment : GoDialogFragment() {
     override fun go(lat: Double, lon: Double) {
         //Toast.makeText(activity, "روی go کلیک شد", Toast.LENGTH_SHORT).show()
@@ -375,4 +384,5 @@ class MyGoDialogFragment : GoDialogFragment() {
     }
 }
 
+*/
 
