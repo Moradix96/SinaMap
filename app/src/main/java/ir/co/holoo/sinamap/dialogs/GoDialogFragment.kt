@@ -8,7 +8,7 @@ import androidx.fragment.app.DialogFragment
 import ir.co.holoo.sinamap.R
 import ir.co.holoo.sinamap.databinding.FragmentGoDialogBinding
 
-class GoDialogFragment : DialogFragment() {
+abstract class GoDialogFragment : DialogFragment() {
     private lateinit var binding: FragmentGoDialogBinding
 
     override fun onStart() {
@@ -31,27 +31,16 @@ class GoDialogFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        /*binding.title.text = title!!
 
-        binding.yesBtn.setOnClickListener {
 
-            if (whatTypeIs) {
-                val dialogFragment = CcGreenAcceptableAlertDialogFragment.newInstance(
-                    true,
-                    nextTitle!!
-                )
-                dialogFragment.show(parentFragmentManager, "CcAlertDialogFragment")
-            } else {
-                val dialogFragment = CcAlertDialogFragment.newInstance(
-                    nextTitle!!,null,
-                    0
-                )
-                dialogFragment.show(parentFragmentManager, "CcAlertDialogFragment")
-            }
+        binding.btnGo.setOnClickListener {
+            go(binding.etLat.text.toString().toDouble(), binding.etLon.text.toString().toDouble())
             dismiss()
-        }*/
+        }
 
     }
+
+    abstract fun go(lat: Double, lon: Double)
 
     override fun getTheme(): Int {
         return R.style.CustomDialogThemeJ

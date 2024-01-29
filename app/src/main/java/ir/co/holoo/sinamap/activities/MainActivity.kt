@@ -29,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.osmdroid.api.IMapController
 import org.osmdroid.bonuspack.routing.OSRMRoadManager
 import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.config.Configuration
@@ -47,6 +48,10 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var locationManager: LocationManager
+    private lateinit var map: MapView
+    private lateinit var mapController: IMapController
+
+    val defaultLocation = GeoPoint(35.736330956312294, 51.46915335841092)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,11 +59,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setupDatabase()
-        val map = binding.map
+
+        map = binding.map
+        mapController = map.controller
 
         //map.zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         map.setMultiTouchControls(true)
-        val mapController = map.controller
         mapController.setZoom(16.0)
 
         // Initialize the OpenStreetMap configuration
@@ -69,42 +75,24 @@ class MainActivity : AppCompatActivity() {
         map.setTileSource(TileSourceFactory.MAPNIK)
 
         // Set the map center to Tehran
-        val tehran = GeoPoint(35.6892, 51.3890)
-        mapController.setCenter(tehran)
+        showTehran()
 
-
-        val startPoint = GeoPoint(35.6892, 51.3890)
-        val endPoint = GeoPoint(35.6992, 51.4000)
-        val waypoints = ArrayList<GeoPoint>()
-        waypoints.add(startPoint)
-        waypoints.add(endPoint)
-
-        GlobalScope.launch(Dispatchers.IO) {
-            val roadManager = OSRMRoadManager(this@MainActivity, "test")
-            val road = roadManager.getRoad(waypoints)
-            withContext(Dispatchers.Main) {
-                val roadOverlay = RoadManager.buildRoadOverlay(road)
-                binding.map.overlays.add(roadOverlay)
-            }
-        }
+        drawExamplePath()
 
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         binding.btnSearch.setOnClickListener {
-            val dialogFragment = GoDialogFragment()
-            dialogFragment.show(supportFragmentManager, "GoDialogFragment")
+            val goDialog = MyGoDialogFragment()
+            goDialog.show(supportFragmentManager, "GoDialogFragment")
         }
 
         binding.fabGoHome.setOnClickListener {
-            Log.d("TAG", "btnGoMyLocation Clicked")
-
             if (ContextCompat.checkSelfPermission(
                     this,
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
                 Log.d("TAG", "PERMISSION_WAS_GRANTED")
-
 
                 val location =
                     locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
@@ -124,7 +112,7 @@ class MainActivity : AppCompatActivity() {
                     )
                     mapController.setCenter(myPoint1)
                     mapController.setZoom(19.0)
-                    binding.map.controller.animateTo(myPoint1)
+                    mapController.animateTo(myPoint1)
                 } else {
                     Log.d("TAG", "Current location is null")
                     Toast.makeText(
@@ -167,24 +155,46 @@ class MainActivity : AppCompatActivity() {
         }
 
         val overlayEvents = MapEventsOverlay(mapEventsReceiver)
-        binding.map.overlays.add(overlayEvents)
+        map.overlays.add(overlayEvents)
 
         loadMapPoints()
+    }
+
+    private fun drawExamplePath() {
+        drawRoute(GeoPoint(35.6892, 51.3890), GeoPoint(35.6992, 51.4000))
+    }
+
+    private fun drawRoute(sourceGeoPoint: GeoPoint, targetGeoPoint: GeoPoint) {
+        val waypoints = ArrayList<GeoPoint>()
+        waypoints.add(sourceGeoPoint)
+        waypoints.add(targetGeoPoint)
+
+        GlobalScope.launch(Dispatchers.IO) {
+            val roadManager = OSRMRoadManager(this@MainActivity, "test")
+            val road = roadManager.getRoad(waypoints)
+            withContext(Dispatchers.Main) {
+                val roadOverlay = RoadManager.buildRoadOverlay(road)
+                map.overlays.add(roadOverlay)
+            }
+        }
+    }
+
+    private fun showTehran() {
+        val tehran = GeoPoint(35.6892, 51.3890)
+        mapController.setCenter(tehran)
     }
 
     private fun loadMapPoints() {
         val list: ArrayList<Place> = DBHelper2.getPlaces(this)
         for (item in list) {
             addMarker(
-                binding.map,
+                map,
                 item.lat,
                 item.lon,
                 R.drawable.map_pin_svgrepo_com,
                 item.name
             )
         }
-
-
     }
 
     private fun setupDatabase() {
@@ -199,7 +209,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showPopup(geoPoint: GeoPoint) {
         // Convert the GeoPoint to a Pixel
-        val point = binding.map.projection.toPixels(geoPoint, null)
+        val point = map.projection.toPixels(geoPoint, null)
 
         // Inflate the popup_layout.xml
         val layoutInflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
@@ -227,31 +237,27 @@ class MainActivity : AppCompatActivity() {
 
         // Set click listeners for popup menu buttons
         buttonRoute.setOnClickListener {
-            drawRouteTo(binding.map, geoPoint)
+            drawRoute(defaultLocation, geoPoint)
             popupWindow.dismiss()
         }
         buttonAdd.setOnClickListener {
             val intent = Intent(this, AddPlaceActivity::class.java)
             intent.putExtra("lat", geoPoint.latitude)
             intent.putExtra("lon", geoPoint.longitude)
-
             launcher.launch(intent)
-
             popupWindow.dismiss()
         }
 
         // Finally, show the popup window on the map
-        popupWindow.showAtLocation(binding.map, Gravity.NO_GRAVITY, point.x, point.y)
+        popupWindow.showAtLocation(map, Gravity.NO_GRAVITY, point.x, point.y)
     }
 
     private val launcher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val data: Intent? = result.data
-                // Handle the result here
-
                 addMarker(
-                    binding.map,
+                    map,
                     data!!.getDoubleExtra("lat", 0.0),
                     data.getDoubleExtra("lon", 0.0),
                     R.drawable.map_pin_svgrepo_com,
@@ -259,58 +265,6 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
-
-    private fun drawRouteTo(map: MapView, geoPoint: GeoPoint) {
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.d("TAG", "PERMISSION_WAS_GRANTED")
-
-
-            val location =
-                locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-            val latitude = location?.latitude
-            val longitude = location?.longitude
-            Log.d("TAG", "Goto " + latitude + "," + longitude)
-            Toast.makeText(this, "اینجا: " + latitude + "," + longitude, Toast.LENGTH_SHORT)
-                .show()
-            if (latitude != null && longitude != null) {
-                val myPoint1 = GeoPoint(latitude, longitude)
-                addMarker(
-                    map,
-                    latitude,
-                    longitude,
-                    R.drawable.map_pin_svgrepo_com,
-                    "شما"
-                )
-                binding.map.controller.setCenter(myPoint1)
-                binding.map.controller.setZoom(19.0)
-                binding.map.controller.animateTo(myPoint1)
-            } else {
-                Log.d("TAG", "Current location is null")
-                Toast.makeText(
-                    this,
-                    "مشکلی هنگام دریافت موقعیت کنونی شما رخ داد!",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        } else {
-            Log.e("TAG", "Permission Denied")
-
-            // Permission is not granted. Request for permission.
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ),
-                123456
-            )
-        }
-
-    }
 
     @SuppressLint("MissingPermission")
     override fun onRequestPermissionsResult(
@@ -331,9 +285,9 @@ class MainActivity : AppCompatActivity() {
                     .show()
                 if (latitude != null && longitude != null) {
                     val myPoint1 = GeoPoint(latitude, longitude)
-                    binding.map.controller.setCenter(myPoint1)
-                    binding.map.controller.setZoom(19.0)
-                    binding.map.controller.animateTo(myPoint1)
+                    mapController.setCenter(myPoint1)
+                    mapController.setZoom(19.0)
+                    mapController.animateTo(myPoint1)
                 } else {
                     Log.d("TAG", "Current location is null")
                     Toast.makeText(
@@ -391,3 +345,11 @@ class MainActivity : AppCompatActivity() {
     }
 
 }
+
+class MyGoDialogFragment : GoDialogFragment() {
+    override fun go(lat: Double, lon: Double) {
+        Toast.makeText(activity, "روی go کلیک شد", Toast.LENGTH_SHORT).show()
+    }
+}
+
+
