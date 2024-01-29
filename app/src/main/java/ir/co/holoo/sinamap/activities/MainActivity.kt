@@ -41,6 +41,7 @@ import org.osmdroid.views.overlay.ItemizedIconOverlay
 import org.osmdroid.views.overlay.ItemizedOverlayWithFocus
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.OverlayItem
+import org.osmdroid.views.overlay.Polyline
 import java.io.IOException
 
 
@@ -51,7 +52,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var map: MapView
     private lateinit var mapController: IMapController
 
-    val defaultLocation = GeoPoint(35.736330956312294, 51.46915335841092)
+    private val defaultLocation = GeoPoint(35.736330956312294, 51.46915335841092)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -165,6 +166,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun drawRoute(sourceGeoPoint: GeoPoint, targetGeoPoint: GeoPoint) {
+        clearRoadOverlays(map)
+
         val waypoints = ArrayList<GeoPoint>()
         waypoints.add(sourceGeoPoint)
         waypoints.add(targetGeoPoint)
@@ -342,6 +345,11 @@ class MainActivity : AppCompatActivity() {
 
         // Add the overlay to the MapView
         map.overlays.add(markersOverlay)
+    }
+
+    fun clearRoadOverlays(map: MapView) {
+        map.overlays.removeAll { it is Polyline }
+        map.invalidate()
     }
 
 }
