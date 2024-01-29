@@ -91,8 +91,8 @@ class MainActivity : AppCompatActivity() {
             goDialog.goListener = object : GoListener {
                 override fun go(lat: Double, lon: Double) {
                     drawRoute(defaultLocation, GeoPoint(lat, lon))
-                    Toast.makeText(this@MainActivity, "GO" + lat + " " + lon, Toast.LENGTH_SHORT)
-                        .show()
+                    /*Toast.makeText(this@MainActivity, "GO" + lat + " " + lon, Toast.LENGTH_SHORT)
+                        .show()*/
                 }
             }
             goDialog.show(supportFragmentManager, "GoDialogFragment")
